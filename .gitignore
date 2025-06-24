@@ -1,1 +1,10 @@
 .env
+__pycache__/
+.venv/
+.vscode/
+.gitignore
+.git/
+.gitignore
+.gitignore  
+extracted_docs/
+generated_docs/
