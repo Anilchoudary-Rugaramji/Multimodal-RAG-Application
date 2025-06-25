@@ -4,9 +4,10 @@ from .utils import encode_image
 from unstructured.partition.pdf import partition_pdf
 from langchain_core.messages import HumanMessage
 from langchain_openai import ChatOpenAI
-from langchain_community.vectorstores import Chroma
-from langchain.storage import InMemoryByteStore
+from langchain_chroma import Chroma
+from langchain.storage import InMemoryStore
 from langchain.retrievers.multi_vector import MultiVectorRetriever
+from langchain.docstore import InMemoryDocstore
 from langchain_core.documents import Document
 from langchain_openai import OpenAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
@@ -56,7 +57,7 @@ def generate_image_based_summaries(image_paths, prompt):
 
 # --- Multi-Vector Retriever Setup ---
 def create_multi_vector_retriever(vectorstore, text_summaries, texts, table_summaries, tables, image_summaries, images):
-    store = InMemoryDocstore()
+    store = InMemoryStore()
     id_key = 'doc_id'
     retriever = MultiVectorRetriever(vectorstore=vectorstore, docstore=store, id_key=id_key)
     def add_documents(summaries, contents):
@@ -100,8 +101,10 @@ Answer the user's question based on the following retrieved content.
 
 # --- Main RAG Pipeline Entrypoint ---
 class RAGPipeline:
-    def __init__(self):
-        self.element_types = load_and_categorize_pdf(settings.PDF_PATH)
+    def __init__(self, pdf_path=None):
+        if pdf_path is None:
+            pdf_path = settings.PDF_PATH
+        self.element_types = load_and_categorize_pdf(pdf_path)
         # For demo, you may want to scan extracted_docs for images/tables
         image_paths = [
             os.path.join(settings.EXTRACTED_DOCS_DIR, f)
@@ -154,4 +157,27 @@ class RAGPipeline:
         if isinstance(response.content, str):
             return response.content
         else:
-            return str(response.content) 
+            return str(response.content)
+
+# --- New: Store document in persistent Chroma vector DB ---
+def store_document_in_vector_db(pdf_path: str, product: str, document: str, persist_directory: str = "./chroma_db"):
+    # Partition
+    elements = partition_pdf(
+        filename=pdf_path,
+        strategy="hi_res",
+        extract_images_in_pdf=True,
+        extract_image_block_types=["Image", "Table"],
+        extract_image_block_to_payload=False,
+        extract_image_block_output_dir=settings.EXTRACTED_DOCS_DIR
+    )
+    # For simplicity, treat all text as one type
+    texts = [str(el) for el in elements]
+    # Embed and store
+    vectorstore = Chroma(
+        collection_name="mm_rag",
+        embedding_function=OpenAIEmbeddings(),
+        persist_directory=persist_directory
+    )
+    metadatas = [{"product": product, "document": document, "chunk_id": i} for i in range(len(texts))]
+    vectorstore.add_texts(texts, metadatas=metadatas)
+    return len(texts) 
