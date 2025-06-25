@@ -3,7 +3,7 @@ import shutil
 import os
 from .models import RAGQueryRequest, RAGQueryResponse
 from .rag_pipeline import RAGPipeline, store_document_in_vector_db
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
