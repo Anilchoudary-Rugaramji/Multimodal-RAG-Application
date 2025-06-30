@@ -1,3 +1,4 @@
+# Dependencies for FastAPI RAG application
 fastapi
 uvicorn
 python-dotenv
@@ -6,4 +7,5 @@ unstructured
 langchain
 langchain-openai
 langchain-community
+langchain-chroma
 pymilvus 
