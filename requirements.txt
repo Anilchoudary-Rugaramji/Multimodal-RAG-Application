@@ -4,6 +4,8 @@ uvicorn
 python-dotenv
 pydantic
 unstructured
+pdfminer.six
+python-magic-bin
 langchain
 langchain-openai
 langchain-community
