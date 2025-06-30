@@ -1,3 +1,4 @@
+# Railway configuration for Docker builds
 [build]
 builder = "dockerfile"
 
