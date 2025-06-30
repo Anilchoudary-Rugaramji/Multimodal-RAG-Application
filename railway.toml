@@ -2,7 +2,6 @@
 [build]
 builder = "dockerfile"
 dockerfilePath = "multimodal_rag_api/Dockerfile"
-buildContext = "multimodal_rag_api"
 
 [deploy]
 startCommand = "" 
