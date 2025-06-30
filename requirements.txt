@@ -3,12 +3,7 @@ fastapi
 uvicorn
 python-dotenv
 pydantic
-unstructured
-unstructured-inference
-pdfminer.six
-python-magic
-pillow
-pi-heif
+unstructured[pdf]
 langchain
 langchain-openai
 langchain-community
