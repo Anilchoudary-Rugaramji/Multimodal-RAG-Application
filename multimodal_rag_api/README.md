@@ -1,15 +1,43 @@
 # Multimodal RAG API
 
-A production-grade FastAPI service for multimodal retrieval-augmented generation (RAG) over scientific PDFs, supporting both text and image queries.
+A FastAPI backend for document-based question answering using RAG (Retrieval-Augmented Generation).
 
-## Usage
+## Features
 
-1. Set your environment variables in `.env` (e.g., `OPENAI_API_KEY`).
-2. Build and run with Docker, or run locally with Uvicorn.
-3. Use the `/rag/query` endpoint to ask questions.
+- PDF document upload and processing
+- Vector-based document search using ChromaDB
+- OpenAI GPT-4 integration for answer generation
+- RESTful API endpoints
 
-## Example
+## Setup
+
+1. Install dependencies:
+```bash
+pip install -r requirements.txt
+```
+
+2. Set environment variables:
+```bash
+export OPENAI_API_KEY=your_openai_key
+export ADMIN_API_KEY=your_admin_key
+```
+
+3. Run the application:
+```bash
+uvicorn app.main:app --reload
+```
+
+## API Endpoints
+
+- `POST /admin/upload` - Upload PDF documents
+- `POST /rag/query` - Query documents  
+- `GET /products` - List uploaded documents
+
+## Deployment
+
+Built with Docker for easy deployment to any cloud platform.
 
 ```bash
-curl -X POST "http://localhost:8000/rag/query" -H "Content-Type: application/json" -d '{"question": "What does figure 3-1 show?"}'
+docker build -t rag-api .
+docker run -p 8000:8000 rag-api
 ``` 
