@@ -4,6 +4,7 @@ uvicorn
 python-dotenv
 pydantic
 unstructured
+unstructured-inference
 pdfminer.six
 python-magic
 pillow
