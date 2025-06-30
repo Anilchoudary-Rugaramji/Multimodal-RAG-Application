@@ -1,10 +1,20 @@
 # Step 1: Start with Python installed
 FROM python:3.11-slim
 
-# Step 2: Install system dependencies for python-magic and PDF processing
+# Step 2: Install system dependencies for unstructured, python-magic, and PDF processing
 RUN apt-get update && apt-get install -y \
     libmagic1 \
     libmagic-dev \
+    tesseract-ocr \
+    tesseract-ocr-eng \
+    poppler-utils \
+    libgl1-mesa-glx \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    libgcc-s1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Step 3: Set up workspace inside container
