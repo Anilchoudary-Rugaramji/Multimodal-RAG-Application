@@ -5,7 +5,7 @@ python-dotenv
 pydantic
 unstructured
 pdfminer.six
-python-magic-bin
+python-magic
 langchain
 langchain-openai
 langchain-community
