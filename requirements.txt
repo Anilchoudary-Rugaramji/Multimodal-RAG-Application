@@ -7,6 +7,7 @@ unstructured
 pdfminer.six
 python-magic
 pillow
+pi-heif
 langchain
 langchain-openai
 langchain-community
