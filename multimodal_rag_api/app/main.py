@@ -27,4 +27,13 @@ app.add_middleware(
 def root():
     return {"message": "Multimodal RAG API is running."}
 
+@app.get("/health")
+def health():
+    import os
+    return {
+        "status": "healthy",
+        "openai_key_set": bool(os.getenv("OPENAI_API_KEY")),
+        "port": os.getenv("PORT", "not set")
+    }
+
 app.include_router(router) 

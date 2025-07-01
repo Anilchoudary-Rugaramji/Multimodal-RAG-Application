@@ -22,9 +22,9 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Step 5: Copy your app code and startup script
+# Step 5: Copy your app code and debug script
 COPY app ./app
-COPY start.sh ./start.sh
+COPY debug_main.py ./debug_main.py
 
 # Step 6: Make startup script executable and create folders
 RUN chmod +x ./start.sh && mkdir -p data chroma_db
@@ -32,5 +32,5 @@ RUN chmod +x ./start.sh && mkdir -p data chroma_db
 # Step 7: Tell Docker which port your app uses
 EXPOSE 8000
 
-# Step 8: Use bash directly to handle PORT environment variable properly
-CMD ["bash", "-c", "PORT=${PORT:-8000} && echo 'Starting on port' $PORT && uvicorn app.main:app --host 0.0.0.0 --port $PORT --log-level info"] 
+# Step 8: Use debug script to test what's working
+CMD ["python", "debug_main.py"] 
