@@ -22,15 +22,14 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Step 5: Copy your app code and debug script
+# Step 5: Copy your app code
 COPY app ./app
-COPY debug_main.py ./debug_main.py
 
-# Step 6: Create folders for data storage  
+# Step 6: Create folders for data storage
 RUN mkdir -p data chroma_db
 
 # Step 7: Tell Docker which port your app uses
 EXPOSE 8000
 
-# Step 8: Use debug script to test what's working
-CMD ["python", "debug_main.py"] 
+# Step 8: Start the actual FastAPI app
+CMD ["bash", "-c", "PORT=${PORT:-8000} && uvicorn app.main:app --host 0.0.0.0 --port $PORT --log-level info"] 
