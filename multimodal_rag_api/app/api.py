@@ -13,12 +13,17 @@ pipeline = None  # Lazy initialization
 
 # In-memory product-document mapping (for demo; use DB in production)
 product_docs = {}
-ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "secret123")
+ADMIN_API_KEY = os.getenv("ADMIN_API_KEY", "admin123")
 
 @router.post("/admin/upload")
 def admin_upload_pdf(product: str, file: UploadFile = File(...), x_api_key: str = Header(...)):
     if x_api_key != ADMIN_API_KEY:
         raise HTTPException(status_code=401, detail="Unauthorized")
+    
+    # Check for OpenAI API key
+    if not os.getenv("OPENAI_API_KEY"):
+        raise HTTPException(status_code=500, detail="OpenAI API key not configured. Cannot process documents.")
+    
     if file.filename is None:
         raise HTTPException(status_code=400, detail="Uploaded file must have a filename.")
     dest_dir = f"./data/{product}"
@@ -53,6 +58,10 @@ def upload_pdf(file: UploadFile = File(...)):
 
 @router.get("/products")
 def list_products():
+    # Check for OpenAI API key
+    if not os.getenv("OPENAI_API_KEY"):
+        return {"error": "OpenAI API key not configured"}
+    
     try:
         vectorstore = Chroma(
             collection_name="mm_rag",
@@ -79,6 +88,10 @@ def list_products():
 
 @router.post("/rag/query", response_model=RAGQueryResponse)
 def rag_query(request: RAGQueryRequest):
+    # Check for OpenAI API key
+    if not os.getenv("OPENAI_API_KEY"):
+        raise HTTPException(status_code=500, detail="OpenAI API key not configured")
+    
     product = getattr(request, 'product', None)
     if not product:
         raise HTTPException(status_code=400, detail="Product is required.")

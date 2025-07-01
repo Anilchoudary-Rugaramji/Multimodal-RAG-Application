@@ -31,5 +31,5 @@ RUN mkdir -p data chroma_db
 # Step 7: Tell Docker which port your app uses
 EXPOSE 8000
 
-# Step 8: Start the real FastAPI app with faster startup
-CMD ["bash", "-c", "PORT=${PORT:-8000} && echo 'Starting Multimodal RAG API on port' $PORT && uvicorn app.main:app --host 0.0.0.0 --port $PORT --log-level info --timeout-keep-alive 120"] 
+# Step 8: Simple, robust startup command
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 
