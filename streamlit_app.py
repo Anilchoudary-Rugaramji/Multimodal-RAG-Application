@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-API_BASE = os.getenv("API_BASE", "http://localhost:8002")  # Update if backend runs elsewhere
+API_BASE = os.getenv("API_BASE", "https://multimodal-rag-application.onrender.com")  # Your deployed backend
 ADMIN_PASSWORD = "admin123"  # Change this to your desired password
 
 # Custom CSS for better styling
