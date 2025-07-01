@@ -26,8 +26,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY app ./app
 COPY debug_main.py ./debug_main.py
 
-# Step 6: Make startup script executable and create folders
-RUN chmod +x ./start.sh && mkdir -p data chroma_db
+# Step 6: Create folders for data storage  
+RUN mkdir -p data chroma_db
 
 # Step 7: Tell Docker which port your app uses
 EXPOSE 8000
