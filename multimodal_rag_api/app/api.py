@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException, UploadFile, File, Header
 import shutil
 import os
+import re
 from .models import RAGQueryRequest, RAGQueryResponse
 from .rag_pipeline import store_document_in_vector_db
 from langchain_chroma import Chroma
@@ -25,27 +26,38 @@ def admin_upload_pdf(product: str, file: UploadFile = File(...), x_api_key: str 
     
     if file.filename is None:
         raise HTTPException(status_code=400, detail="Uploaded file must have a filename.")
-    dest_dir = f"./data/{product}"
+    
+    # Sanitize product name to avoid path issues
+    safe_product = "".join(c for c in product if c.isalnum() or c in (' ', '-', '_')).strip()
+    safe_product = safe_product.replace(' ', '_')  # Replace spaces with underscores
+    
+    # Use absolute path construction to avoid Windows path issues
+    data_dir = os.path.abspath("./data")
+    dest_dir = os.path.join(data_dir, safe_product)
     os.makedirs(dest_dir, exist_ok=True)
-    dest = os.path.join(dest_dir, file.filename)
+    
+    # Sanitize filename as well
+    safe_filename = "".join(c for c in file.filename if c.isalnum() or c in (' ', '-', '_', '.')).strip()
+    dest = os.path.join(dest_dir, safe_filename)
     try:
         # Save file first
         with open(dest, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
         
-        # Store document metadata
+        # Store document metadata using original product name for display
         if product not in product_docs:
             product_docs[product] = []
         product_docs[product].append(file.filename)
         
         # Process document with timeout protection
         try:
-            print(f"Starting document processing for {file.filename}...")
+            print(f"Starting document processing for {safe_filename}...")
+            print(f"File path: {dest}")
             num_chunks = store_document_in_vector_db(dest, product, file.filename)
-            print(f"Successfully processed {file.filename}: {num_chunks} chunks")
+            print(f"Successfully processed {safe_filename}: {num_chunks} chunks")
             return {"product": product, "filename": file.filename, "chunks_stored": num_chunks}
         except Exception as process_error:
-            print(f"Document processing failed: {process_error}")
+            print(f"Document processing failed for {safe_filename}: {process_error}")
             # File was saved but processing failed
             return {
                 "product": product, 
@@ -55,7 +67,12 @@ def admin_upload_pdf(product: str, file: UploadFile = File(...), x_api_key: str 
                 "chunks_stored": 0
             }
     except Exception as e:
-        print(f"Upload failed: {e}")
+        print(f"Upload failed for product '{product}', file '{file.filename if file.filename else 'unknown'}': {e}")
+        try:
+            print(f"Safe product: '{safe_product}', Safe filename: '{safe_filename}'")
+            print(f"Destination path: {dest}")
+        except:
+            print("Error occurred before path sanitization")
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
 # Old upload endpoint removed - use /admin/upload instead
@@ -140,9 +157,38 @@ def rag_query(request: RAGQueryRequest):
         if not context_text.strip():
             return RAGQueryResponse(answer="I don't know.")
         
+        # Create intelligent prompt based on context richness
+        context_length = len(context_text)
+        
+        if context_length > 1000:
+            # Rich context - encourage detailed response
+            system_prompt = """You are a helpful assistant that answers questions based on the provided context. 
+            
+            Instructions:
+            - Give comprehensive and detailed answers when you have sufficient information
+            - Include specific details, examples, and elaborations from the context
+            - Structure your response clearly with relevant points
+            - Use only information from the provided context"""
+        elif context_length > 300:
+            # Medium context - balanced response
+            system_prompt = """You are a helpful assistant that answers questions based on the provided context.
+            
+            Instructions:
+            - Provide clear and informative answers using the available context
+            - Include key details but keep responses focused
+            - Use only information from the provided context"""
+        else:
+            # Limited context - short response
+            system_prompt = """You are a helpful assistant that answers questions based on the provided context.
+            
+            Instructions:
+            - Give concise, direct answers based on the limited information available
+            - If context is insufficient for a detailed answer, provide what you can briefly
+            - Use only information from the provided context"""
+        
         messages = [
-            {"role": "system", "content": "You are a helpful assistant. Use only the provided context to answer. If not in context, say 'I don't know.'"},
-            {"role": "user", "content": f"Context:\n{context_text}\n\nQuestion:\n{request.question}"}
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": f"Context:\n{context_text}\n\nQuestion: {request.question}\n\nAnswer:"}
         ]
         llm = ChatOpenAI(model="gpt-4o")
         response = llm.invoke(messages)
@@ -151,4 +197,6 @@ def rag_query(request: RAGQueryRequest):
         else:
             return RAGQueryResponse(answer=str(response.content))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
+
+ 

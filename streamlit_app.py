@@ -10,49 +10,263 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-API_BASE = os.getenv("API_BASE", "https://multimodal-rag-application.onrender.com")  # Your deployed backend
+API_BASE = os.getenv("API_BASE", "http://localhost:8002")  # Your deployed backend
 ADMIN_PASSWORD = "admin123"  # Change this to your desired password
 
-# Custom CSS for better styling
+# Clean and elegant styling
 st.markdown("""
 <style>
+    /* Reset and clean layout - compact */
+    .main .block-container {
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+        max-width: 1200px;
+    }
+    
+    /* Header - more compact */
     .main-header {
         text-align: center;
         padding: 1rem 0;
-        margin-bottom: 2rem;
+        margin-bottom: 1.5rem;
+        border-bottom: 1px solid #e9ecef;
     }
+    
+    /* Admin section */
     .admin-success {
         background-color: #d4edda;
         border: 1px solid #c3e6cb;
-        border-radius: 0.5rem;
-        padding: 0.75rem;
-        margin: 0.5rem 0;
-    }
-    .upload-section {
-        background-color: #f8f9fa;
-        padding: 1.5rem;
-        border-radius: 0.5rem;
+        border-radius: 8px;
+        padding: 1rem;
         margin: 1rem 0;
     }
-    .chat-container {
-        background-color: #ffffff;
-        border-radius: 0.5rem;
-        padding: 1rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    
+    /* Upload section - clean and compact */
+    .upload-section {
+        padding: 1rem 0;
+        margin: 1rem 0;
     }
+    
+    /* Make upload section text much bigger */
+    .upload-section .stTextInput > label > div {
+        font-size: 1.4rem !important;
+        font-weight: 700 !important;
+        color: #333 !important;
+    }
+    
+    .upload-section .stTextInput input {
+        font-size: 1.2rem !important;
+        padding: 1rem !important;
+        height: 3rem !important;
+    }
+    
+    .upload-section .stFileUploader > label > div {
+        font-size: 1.4rem !important;
+        font-weight: 700 !important;
+        color: #333 !important;
+    }
+    
+    .upload-section .stFileUploader section {
+        font-size: 1.2rem !important;
+    }
+    
+    .upload-section .stFileUploader section button {
+        font-size: 1.1rem !important;
+        padding: 0.8rem 1.2rem !important;
+    }
+    
+    .upload-section .stButton > button {
+        font-size: 1.2rem !important;
+        padding: 1rem 1.5rem !important;
+        height: 3rem !important;
+        font-weight: 700 !important;
+    }
+    
+    /* Make text bigger throughout the app */
+    .stTextInput > label {
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+        margin-bottom: 0.5rem !important;
+    }
+    
+    .stTextInput > div > div > input {
+        font-size: 1rem !important;
+        padding: 0.75rem !important;
+        height: auto !important;
+        min-height: 2.5rem !important;
+    }
+    
+    .stFileUploader > label {
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+    }
+    
+    .stFileUploader section {
+        font-size: 1rem !important;
+    }
+    
+    .stSelectbox > label {
+        font-size: 1.1rem !important;
+        font-weight: 600 !important;
+    }
+    
+    .stSelectbox > div > div {
+        font-size: 1rem !important;
+    }
+    
+    /* Sidebar text bigger */
+    .sidebar .stMarkdown {
+        font-size: 1rem !important;
+    }
+    
+    .sidebar h3 {
+        font-size: 1.3rem !important;
+    }
+    
+    .sidebar .stTextInput > label {
+        font-size: 1rem !important;
+    }
+    
+    .sidebar .stButton > button {
+        font-size: 1rem !important;
+        padding: 0.6rem 1rem !important;
+        height: auto !important;
+        min-height: 2.2rem !important;
+    }
+    
+    /* Main buttons bigger */
     .stButton > button {
-        width: 100%;
-        border-radius: 0.5rem;
-        height: 2.5rem;
+        font-size: 1.1rem !important;
+        padding: 0.75rem 1.5rem !important;
+        height: auto !important;
+        min-height: 2.5rem !important;
+        font-weight: 600 !important;
+    }
+    
+    /* Main content text bigger */
+    .stMarkdown h2 {
+        font-size: 1.8rem !important;
+    }
+    
+    .stMarkdown h3 {
+        font-size: 1.5rem !important;
+    }
+    
+    .stMarkdown p {
+        font-size: 1.1rem !important;
+    }
+    
+    /* Force full width for question container */
+    .question-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+    
+    /* Stronger CSS overrides for the main input */
+    .question-container .stTextInput,
+    .question-container .stTextInput > div,
+    .question-container .stTextInput > div > div {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+    }
+    
+    .question-container .stTextInput > div > div > input {
+        font-size: 1.2rem !important;
+        padding: 1rem 1.2rem !important;
+        height: 3.5rem !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        border: 2px solid #e3f2fd !important;
+        border-radius: 10px !important;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1) !important;
+        background: #fafafa !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+        flex-grow: 1 !important;
+    }
+    
+    .question-container .stTextInput > div > div > input:focus {
+        border-color: #1976d2 !important;
+        box-shadow: 0 0 0 0.2rem rgba(25, 118, 210, 0.15) !important;
+        background: white !important;
+        outline: none !important;
+    }
+    
+    /* Override any Streamlit container restrictions */
+    .question-container .element-container {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    /* Make the main button more attractive */
+    .stButton > button[kind="primary"] {
+        background: linear-gradient(45deg, #1976d2, #1565c0) !important;
+        color: white !important;
+        border: none !important;
+        border-radius: 12px !important;
+        padding: 1rem 2rem !important;
+        font-size: 1.3rem !important;
+        font-weight: 700 !important;
+        height: 3.5rem !important;
+        box-shadow: 0 4px 12px rgba(25, 118, 210, 0.3) !important;
+        transition: all 0.3s ease !important;
+    }
+    
+    .stButton > button[kind="primary"]:hover {
+        transform: translateY(-2px) !important;
+        box-shadow: 0 6px 16px rgba(25, 118, 210, 0.4) !important;
+    }
+    
+    /* Message styling - simple and clean */
+    .message-user {
+        background: #e3f2fd;
+        color: #1565c0;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        margin: 1rem 0 1rem 3rem;
+        border-left: 4px solid #1976d2;
+    }
+    
+    .message-assistant {
+        background: #f5f5f5;
+        color: #424242;
+        padding: 1rem 1.5rem;
+        border-radius: 12px;
+        margin: 1rem 3rem 1rem 0;
+        border-left: 4px solid #757575;
+    }
+    
+    .chat-history {
+        background: #fafafa;
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-top: 2rem;
+        border: 1px solid #e9ecef;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+
+    
+    /* Empty state */
+    .empty-state {
+        text-align: center;
+        padding: 3rem;
+        background: #f8f9fa;
+        border-radius: 12px;
+        border: 1px dashed #dee2e6;
+        margin: 2rem 0;
     }
 </style>
 """, unsafe_allow_html=True)
 
-# Main header
+# Main header - compact
 st.markdown("""
 <div class="main-header">
-    <h1>📚 Multimodal RAG Assistant</h1>
-    <p style="font-size: 1.1rem; color: #666; margin-top: 0.5rem;">
+    <h1 style="font-size: 1.8rem; margin-bottom: 0.3rem;">📚 Multimodal RAG Assistant</h1>
+    <p style="font-size: 1rem; color: #666; margin: 0;">
         Upload documents and ask intelligent questions using AI-powered search
     </p>
 </div>
@@ -211,122 +425,148 @@ with st.sidebar:
     else:
         st.warning("⚠️ No products available. Upload documents to get started!")
 
-# Main chat interface
-st.markdown("## 💬 Ask Questions")
-
 # Check if product is selected and has documents
 if not st.session_state.selected_product or not products_data.get(st.session_state.selected_product):
     st.markdown("""
-    <div style="text-align: center; padding: 2rem; background-color: #fff3cd; border-radius: 0.5rem; margin: 1rem 0;">
+    <div class="empty-state">
         <h3>⚠️ No Product Selected</h3>
         <p>Please select a product with uploaded documents from the sidebar to start asking questions.</p>
     </div>
     """, unsafe_allow_html=True)
     st.stop()
 
-# Question input section
-with st.container():
-    st.markdown('<div class="chat-container">', unsafe_allow_html=True)
-    
-    col1, col2 = st.columns([4, 1])
-    
-    with col1:
-        question = st.text_input(
-            f"💭 Ask about **{st.session_state.selected_product}**:",
-            placeholder="e.g., What is the work experience? Tell me about the features...",
-            key="question_input",
-            label_visibility="visible"
-        )
-    
-    with col2:
-        st.markdown("<br>", unsafe_allow_html=True)  # Align button with input
-        ask_clicked = st.button("🚀 Ask", type="primary", key="ask_btn")
-    
-    # Process question
-    if ask_clicked and question.strip():
-        with st.spinner("🤖 AI is thinking..."):
-            try:
-                response = requests.post(
-                    f"{API_BASE}/rag/query",
-                    json={"question": question, "product": st.session_state.selected_product}
-                )
-                
-                if response.status_code == 200:
-                    answer = response.json()["answer"]
-                    # Add to chat history
-                    st.session_state.chat_history.append({
-                        "question": question,
-                        "answer": answer,
-                        "product": st.session_state.selected_product
-                    })
-                    st.rerun()
-                else:
-                    st.error(f"❌ Server Error: {response.text}")
-            except Exception as e:
-                st.error(f"❌ Connection Error: {str(e)}")
-    
-    elif ask_clicked and not question.strip():
-        st.warning("⚠️ Please enter a question before asking!")
-    
-    st.markdown('</div>', unsafe_allow_html=True)
+# Compact spacing
+st.markdown('<div style="margin: 1rem 0;"></div>', unsafe_allow_html=True)
 
-# Display chat history
+# Simple and attractive chat section - more compact
+st.markdown(f"""
+<div style="text-align: center; margin-bottom: 1.5rem;">
+    <h2 style="color: #1976d2; font-size: 1.8rem; margin-bottom: 0.3rem;">
+        💬 Chat with {st.session_state.selected_product}
+    </h2>
+    <p style="color: #666; font-size: 1.1rem; margin: 0;">
+        📁 {len(products_data.get(st.session_state.selected_product, []))} document{'s' if len(products_data.get(st.session_state.selected_product, [])) != 1 else ''} ready to answer your questions
+    </p>
+</div>
+""", unsafe_allow_html=True)
+
+# Question Input - more compact
+st.markdown("""
+<div style="background: white; padding: 1.5rem; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 1rem 0;">
+    <h3 style="color: #333; margin-bottom: 0.8rem; text-align: center;">✨ What would you like to know?</h3>
+</div>
+""", unsafe_allow_html=True)
+
+# Force full width container
+st.markdown('<div class="question-container">', unsafe_allow_html=True)
+
+question = st.text_input(
+    "Type your question here...",
+    placeholder="e.g., Tell me about work experience, skills, projects, education...",
+    key="question_input",
+    label_visibility="collapsed"
+)
+
+st.markdown('</div>', unsafe_allow_html=True)
+
+st.markdown('<div style="margin: 1rem 0;"></div>', unsafe_allow_html=True)
+
+col1, col2, col3 = st.columns([1, 2, 1])
+with col2:
+    ask_clicked = st.button("🚀 Get Answer", type="primary", use_container_width=True)
+
+# Process question
+if ask_clicked and question.strip():
+    with st.spinner("🤖 Getting answer..."):
+        try:
+            response = requests.post(
+                f"{API_BASE}/rag/query",
+                json={"question": question, "product": st.session_state.selected_product}
+            )
+            
+            if response.status_code == 200:
+                answer = response.json()["answer"]
+                # Add to chat history
+                st.session_state.chat_history.append({
+                    "question": question,
+                    "answer": answer,
+                    "product": st.session_state.selected_product
+                })
+                st.rerun()
+            else:
+                st.error(f"❌ Server Error: {response.text}")
+        except Exception as e:
+            st.error(f"❌ Connection Error: {str(e)}")
+
+elif ask_clicked and not question.strip():
+    st.warning("⚠️ Please enter a question first!")
+
+# Chat History Section
 if st.session_state.chat_history:
-    st.markdown("## 📝 Chat History")
+    st.markdown('<div style="margin: 2rem 0;"></div>', unsafe_allow_html=True)
+    st.markdown('<div class="chat-history">', unsafe_allow_html=True)
     
-    # Clear all button at the top
-    col1, col2, col3 = st.columns([2, 1, 2])
+    # Header
+    col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
-        if st.button("🗑️ Clear All", key="clear_all", help="Clear entire chat history"):
+        st.markdown("### 📝 Conversation History")
+    with col3:
+        if st.button("🗑️ Clear All", key="clear_all"):
             st.session_state.chat_history = []
             st.rerun()
     
-    # Display chat messages
+    st.markdown("---")
+    
+    # Display conversations - clean and simple
     for i, chat in enumerate(reversed(st.session_state.chat_history)):
-        with st.container():
-            st.markdown('<div style="border: 1px solid #e0e0e0; border-radius: 0.5rem; padding: 1rem; margin: 0.5rem 0; background-color: #fafafa;">', unsafe_allow_html=True)
-            
-            # Question
-            st.markdown(f"**🤔 Question:** {chat['question']}")
-            
-            # Product info
-            product_info = chat.get('product', 'Unknown')
-            st.markdown(f"<small><em>📁 Product: {product_info}</em></small>", unsafe_allow_html=True)
-            
-            # Answer
-            st.markdown(f"**🤖 Answer:**")
-            st.markdown(chat['answer'])
-            
-            # Delete button
-            col1, col2, col3 = st.columns([3, 1, 1])
-            with col3:
-                if st.button("🗑️", key=f"delete_{i}", help="Delete this conversation"):
-                    st.session_state.chat_history.pop(-(i+1))
-                    st.rerun()
-            
-            st.markdown('</div>', unsafe_allow_html=True)
-            
+        # Question
+        st.markdown(f"""
+        <div class="message-user">
+            <strong>❓ Your Question:</strong><br>
+            {chat['question']}
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Answer
+        st.markdown(f"""
+        <div class="message-assistant">
+            <strong>🤖 Answer:</strong><br>
+            {chat['answer']}
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # Delete option
+        col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
+        with col4:
+            if st.button("🗑️ Delete", key=f"delete_{i}"):
+                st.session_state.chat_history.pop(-(i+1))
+                st.rerun()
+        
+        # Separator
+        if i < len(st.session_state.chat_history) - 1:
+            st.markdown("---")
+    
+    st.markdown('</div>', unsafe_allow_html=True)
+    
 else:
+    # Empty state
     st.markdown("""
-    <div style="text-align: center; padding: 2rem; color: #666;">
-        <h3>💭 No conversations yet</h3>
-        <p>Start asking questions about your documents to see the chat history here!</p>
+    <div class="empty-state">
+        <div style="font-size: 2rem; margin-bottom: 1rem;">💭</div>
+        <h3>No Conversations Yet</h3>
+        <p>Ask a question above to start your conversation!</p>
     </div>
     """, unsafe_allow_html=True)
 
-# Footer
-st.markdown("<br><br>", unsafe_allow_html=True)
+# Footer - compact
 st.markdown("---")
 st.markdown(
     """
-    <div style='text-align: center; color: #888; padding: 1rem;'>
-        <p style='margin: 0; font-size: 0.9rem;'>
+    <div style='text-align: center; color: #888; padding: 0.5rem;'>
+        <p style='margin: 0; font-size: 0.8rem;'>
             🚀 Built with <strong>Streamlit</strong> • 
             ⚡ Powered by <strong>FastAPI</strong> • 
             🧠 Enhanced with <strong>OpenAI GPT-4</strong>
-        </p>
-        <p style='margin: 0.5rem 0 0 0; font-size: 0.8rem; color: #aaa;'>
-            Multimodal RAG Pipeline for Intelligent Document Search
         </p>
     </div>
     """,

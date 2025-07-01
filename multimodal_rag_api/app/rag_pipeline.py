@@ -170,8 +170,30 @@ def store_document_in_vector_db(pdf_path: str, product: str, document: str, pers
         extract_image_block_to_payload=False,
         extract_image_block_output_dir=settings.EXTRACTED_DOCS_DIR
     )
-    # For simplicity, treat all text as one type
-    texts = [str(el) for el in elements]
+    # Combine elements into meaningful chunks
+    texts = []
+    current_chunk = ""
+    
+    for el in elements:
+        text = str(el).strip()
+        if len(text) < 10:  # Skip very short elements
+            continue
+            
+        # Add text to current chunk
+        current_chunk += text + " "
+        
+        # Create chunk when it reaches good size or at natural breaks
+        if len(current_chunk) > 500 or text.endswith('.') and len(current_chunk) > 200:
+            if current_chunk.strip():
+                texts.append(current_chunk.strip())
+            current_chunk = ""
+    
+    # Add final chunk if any
+    if current_chunk.strip():
+        texts.append(current_chunk.strip())
+    
+    # Remove duplicates and very short texts
+    texts = [t for t in texts if len(t) > 50]
     # Embed and store
     vectorstore = Chroma(
         collection_name="mm_rag",
