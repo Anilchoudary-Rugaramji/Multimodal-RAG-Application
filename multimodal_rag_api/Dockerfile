@@ -32,5 +32,5 @@ RUN chmod +x ./start.sh && mkdir -p data chroma_db
 # Step 7: Tell Docker which port your app uses
 EXPOSE 8000
 
-# Step 8: Use startup script to handle PORT environment variable
-CMD ["./start.sh"] 
+# Step 8: Use bash directly to handle PORT environment variable properly
+CMD ["bash", "-c", "PORT=${PORT:-8000} && echo 'Starting on port' $PORT && uvicorn app.main:app --host 0.0.0.0 --port $PORT --log-level info"] 
