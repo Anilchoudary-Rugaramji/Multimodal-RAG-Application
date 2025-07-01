@@ -22,14 +22,15 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Step 5: Copy your app code
+# Step 5: Copy your app code and startup script
 COPY app ./app
+COPY start.sh ./start.sh
 
-# Step 6: Create folders for data storage
-RUN mkdir -p data chroma_db
+# Step 6: Make startup script executable and create folders
+RUN chmod +x ./start.sh && mkdir -p data chroma_db
 
 # Step 7: Tell Docker which port your app uses
 EXPOSE 8000
 
-# Step 8: Command to start your FastAPI app (use PORT env var for cloud deployment)
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"] 
+# Step 8: Use startup script to handle PORT environment variable
+CMD ["./start.sh"] 
