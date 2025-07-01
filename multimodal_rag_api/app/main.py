@@ -13,9 +13,11 @@ app.add_middleware(
     allow_origins=[
         "http://localhost:3000",
         "http://127.0.0.1:3000",
-        "http://192.168.27.1:3000",
         "http://localhost:8501",
         "http://127.0.0.1:8501",
+        "http://192.168.2.112:8501",  # Your main network IP
+        "http://192.168.27.1:8501",
+        "http://192.168.32.1:8501", 
         "*"  # Allow all origins for deployed version
     ],
     allow_credentials=True,
