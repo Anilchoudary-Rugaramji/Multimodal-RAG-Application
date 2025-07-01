@@ -2,14 +2,13 @@ from fastapi import APIRouter, HTTPException, UploadFile, File, Header
 import shutil
 import os
 from .models import RAGQueryRequest, RAGQueryResponse
-from .rag_pipeline import RAGPipeline, store_document_in_vector_db
+from .rag_pipeline import store_document_in_vector_db
 from langchain_chroma import Chroma
 from langchain_openai import OpenAIEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_openai import ChatOpenAI
 
 router = APIRouter()
-pipeline = None  # Lazy initialization
 
 # In-memory product-document mapping (for demo; use DB in production)
 product_docs = {}
@@ -42,19 +41,7 @@ def admin_upload_pdf(product: str, file: UploadFile = File(...), x_api_key: str 
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
-@router.post("/upload")
-def upload_pdf(file: UploadFile = File(...)):
-    dest_dir = "./data"
-    dest = os.path.join(dest_dir, "attention_paper.pdf")
-    try:
-        os.makedirs(dest_dir, exist_ok=True)
-        with open(dest, "wb") as buffer:
-            shutil.copyfileobj(file.file, buffer)
-        global pipeline
-        pipeline = RAGPipeline()  # Re-initialize after upload
-        return {"filename": file.filename}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
+# Old upload endpoint removed - use /admin/upload instead
 
 @router.get("/products")
 def list_products():
