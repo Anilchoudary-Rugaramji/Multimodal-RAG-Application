@@ -29,16 +29,33 @@ def admin_upload_pdf(product: str, file: UploadFile = File(...), x_api_key: str 
     os.makedirs(dest_dir, exist_ok=True)
     dest = os.path.join(dest_dir, file.filename)
     try:
+        # Save file first
         with open(dest, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
+        
         # Store document metadata
         if product not in product_docs:
             product_docs[product] = []
         product_docs[product].append(file.filename)
-        # Partition, embed, and store in persistent vector DB
-        num_chunks = store_document_in_vector_db(dest, product, file.filename)
-        return {"product": product, "filename": file.filename, "chunks_stored": num_chunks}
+        
+        # Process document with timeout protection
+        try:
+            print(f"Starting document processing for {file.filename}...")
+            num_chunks = store_document_in_vector_db(dest, product, file.filename)
+            print(f"Successfully processed {file.filename}: {num_chunks} chunks")
+            return {"product": product, "filename": file.filename, "chunks_stored": num_chunks}
+        except Exception as process_error:
+            print(f"Document processing failed: {process_error}")
+            # File was saved but processing failed
+            return {
+                "product": product, 
+                "filename": file.filename, 
+                "status": "uploaded but processing failed",
+                "error": str(process_error),
+                "chunks_stored": 0
+            }
     except Exception as e:
+        print(f"Upload failed: {e}")
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
 
 # Old upload endpoint removed - use /admin/upload instead
@@ -50,14 +67,25 @@ def list_products():
         return {"error": "OpenAI API key not configured"}
     
     try:
+        # Check if vector database directory exists
+        if not os.path.exists("./chroma_db"):
+            return {}  # No products yet
+        
         vectorstore = Chroma(
             collection_name="mm_rag",
             embedding_function=OpenAIEmbeddings(),
             persist_directory="./chroma_db"
         )
         
-        # Get all documents and organize by product
-        all_docs = vectorstore.get()
+        # Check if collection has any documents
+        try:
+            all_docs = vectorstore.get()
+            if not all_docs or not all_docs.get('metadatas'):
+                return {}  # Empty database
+        except Exception as inner_e:
+            print(f"Vector DB access error: {inner_e}")
+            return {}  # Return empty if DB access fails
+        
         products = {}
         
         for metadata in all_docs['metadatas']:
@@ -71,6 +99,7 @@ def list_products():
         
         return products
     except Exception as e:
+        print(f"Products endpoint error: {e}")
         return {"error": f"Failed to load products: {str(e)}"}
 
 @router.post("/rag/query", response_model=RAGQueryResponse)

@@ -31,5 +31,5 @@ RUN mkdir -p data chroma_db
 # Step 7: Tell Docker which port your app uses
 EXPOSE 8000
 
-# Step 8: Simple, robust startup command
-CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 
+# Step 8: Robust startup with timeout settings for long requests
+CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1 --timeout-keep-alive 300 --timeout-graceful-shutdown 60 
