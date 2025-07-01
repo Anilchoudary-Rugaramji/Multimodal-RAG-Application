@@ -53,13 +53,36 @@ def upload_pdf(file: UploadFile = File(...)):
 
 @router.get("/products")
 def list_products():
-    return product_docs
+    try:
+        vectorstore = Chroma(
+            collection_name="mm_rag",
+            embedding_function=OpenAIEmbeddings(),
+            persist_directory="./chroma_db"
+        )
+        
+        # Get all documents and organize by product
+        all_docs = vectorstore.get()
+        products = {}
+        
+        for metadata in all_docs['metadatas']:
+            if metadata and 'product' in metadata and 'document' in metadata:
+                product = metadata['product']
+                document = metadata['document']
+                if product not in products:
+                    products[product] = []
+                if document not in products[product]:
+                    products[product].append(document)
+        
+        return products
+    except Exception as e:
+        return {"error": f"Failed to load products: {str(e)}"}
 
 @router.post("/rag/query", response_model=RAGQueryResponse)
 def rag_query(request: RAGQueryRequest):
     product = getattr(request, 'product', None)
-    if not product or product not in product_docs or not product_docs[product]:
-        raise HTTPException(status_code=400, detail="Invalid or missing product, or no documents uploaded for this product.")
+    if not product:
+        raise HTTPException(status_code=400, detail="Product is required.")
+    
     try:
         # Load persistent vector DB
         vectorstore = Chroma(
@@ -67,12 +90,27 @@ def rag_query(request: RAGQueryRequest):
             embedding_function=OpenAIEmbeddings(),
             persist_directory="./chroma_db"
         )
+        
+        # Check if product exists in vector DB by trying to retrieve docs
+        test_retriever = vectorstore.as_retriever(search_kwargs={"k": 1, "filter": {"product": product}})
+        test_docs = test_retriever.invoke("test")
+        
+        if not test_docs:
+            raise HTTPException(status_code=400, detail=f"No documents found for product '{product}'. Available products: {list(set([doc.get('product', 'unknown') for doc in vectorstore.get()['metadatas'] if doc]))}")
+        
         # Retrieve relevant chunks for the product
         retriever = vectorstore.as_retriever(search_kwargs={"k": 5, "filter": {"product": product}})
         docs = retriever.invoke(request.question)
         text_chunks = [doc.page_content for doc in docs]
-        print("RETRIEVED CHUNKS:", text_chunks)
+        print(f"RETRIEVED {len(docs)} CHUNKS for product '{product}':")
+        for i, chunk in enumerate(text_chunks):
+            print(f"CHUNK {i+1}: {chunk[:200]}...")
         context_text = '\n'.join(text_chunks)
+        print(f"CONTEXT LENGTH: {len(context_text)} characters")
+        
+        if not context_text.strip():
+            return RAGQueryResponse(answer="I don't know.")
+        
         messages = [
             {"role": "system", "content": "You are a helpful assistant. Use only the provided context to answer. If not in context, say 'I don't know.'"},
             {"role": "user", "content": f"Context:\n{context_text}\n\nQuestion:\n{request.question}"}

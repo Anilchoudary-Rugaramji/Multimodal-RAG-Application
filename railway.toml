@@ -1,7 +1,0 @@
-# Railway configuration for Docker builds
-[build]
-builder = "dockerfile"
-dockerfilePath = "multimodal_rag_api/Dockerfile"
-
-[deploy]
-startCommand = "" 

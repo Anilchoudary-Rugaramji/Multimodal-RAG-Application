@@ -16,8 +16,8 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Step 5: Copy your app code from the subdirectory
-COPY multimodal_rag_api/app ./app
+# Step 5: Copy your app code
+COPY app ./app
 
 # Step 6: Create folders for data storage
 RUN mkdir -p data chroma_db

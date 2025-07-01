@@ -9,7 +9,7 @@ st.set_page_config(
     layout="wide"
 )
 
-API_BASE = "http://localhost:8001"  # Update if backend runs elsewhere
+API_BASE = os.getenv("API_BASE", "http://localhost:8002")  # Update if backend runs elsewhere
 ADMIN_PASSWORD = "admin123"  # Change this to your desired password
 
 # Title and description
@@ -65,7 +65,7 @@ if st.session_state.admin_authenticated:
                     
                     # Upload to backend
                     files = {"file": (uploaded_file.name, file_bytes)}
-                    headers = {"x-api-key": "secret123"}  # Use your actual API key
+                    headers = {"x-api-key": "admin123"}  # Use your actual API key
                     
                     response = requests.post(
                         f"{API_BASE}/admin/upload",
