@@ -31,5 +31,5 @@ RUN mkdir -p data chroma_db
 # Step 7: Tell Docker which port your app uses
 EXPOSE 8000
 
-# Step 8: Command to start your FastAPI app
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"] 
+# Step 8: Command to start your FastAPI app (use PORT env var for cloud deployment)
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"] 
