@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 import os
 
-# Configure the page
 st.set_page_config(
     page_title="Multimodal RAG Assistant",
     page_icon="📚",
@@ -10,35 +9,13 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-API_BASE = os.getenv("API_BASE", "http://localhost:8002")  # Your deployed backend
-ADMIN_PASSWORD = "admin123"  # Change this to your desired password
-
-# Clean and elegant styling
+API_BASE = os.getenv("API_BASE", "http://localhost:8002")
+ADMIN_PASSWORD = "admin123"
 st.markdown("""
 <style>
-    /* Reset and clean layout - compact */
-    .main .block-container {
-        padding-top: 1rem;
-        padding-bottom: 1rem;
-        max-width: 1200px;
-    }
-    
-    /* Header - more compact */
-    .main-header {
-        text-align: center;
-        padding: 1rem 0;
-        margin-bottom: 1.5rem;
-        border-bottom: 1px solid #e9ecef;
-    }
-    
-    /* Admin section */
-    .admin-success {
-        background-color: #d4edda;
-        border: 1px solid #c3e6cb;
-        border-radius: 8px;
-        padding: 1rem;
-        margin: 1rem 0;
-    }
+    .main .block-container { padding-top: 1rem; padding-bottom: 1rem; max-width: 1200px; }
+    .main-header { text-align: center; padding: 1rem 0; margin-bottom: 1.5rem; border-bottom: 1px solid #e9ecef; }
+    .admin-success { background-color: #d4edda; border: 1px solid #c3e6cb; border-radius: 8px; padding: 1rem; margin: 1rem 0; }
     
     /* Upload section - clean and compact */
     .upload-section {
@@ -262,17 +239,14 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Main header - compact
 st.markdown("""
 <div class="main-header">
-    <h1 style="font-size: 1.8rem; margin-bottom: 0.3rem;">📚 Multimodal RAG Assistant</h1>
+    <h1 style="font-size: 1.8rem; margin-bottom: 0.3rem;">📄 PDF Q&A Assistant</h1>
     <p style="font-size: 1rem; color: #666; margin: 0;">
-        Upload documents and ask intelligent questions using AI-powered search
+        Upload PDF files and get answers from your documents using RAG
     </p>
 </div>
 """, unsafe_allow_html=True)
-
-# Initialize session state
 if 'selected_product' not in st.session_state:
     st.session_state.selected_product = None
 if 'chat_history' not in st.session_state:
@@ -280,12 +254,10 @@ if 'chat_history' not in st.session_state:
 if 'admin_authenticated' not in st.session_state:
     st.session_state.admin_authenticated = False
 
-# Admin Authentication Section
 with st.sidebar:
     st.markdown("### 🔐 Admin Access")
     
     if not st.session_state.admin_authenticated:
-        # Login form
         with st.container():
             admin_password = st.text_input("Enter Admin Password", type="password", key="admin_pwd", placeholder="Enter password...")
             col1, col2 = st.columns([1, 1])
@@ -298,7 +270,6 @@ with st.sidebar:
                     else:
                         st.error("❌ Invalid password!")
     else:
-        # Admin is logged in
         st.markdown("""
         <div class="admin-success">
             <strong>🔓 Admin Mode Active</strong><br>
@@ -312,7 +283,6 @@ with st.sidebar:
     
     st.markdown("---")
 
-# Admin Upload Section (only visible when authenticated)
 if st.session_state.admin_authenticated:
     st.markdown("## 📤 Document Upload")
     
@@ -344,10 +314,8 @@ if st.session_state.admin_authenticated:
                 if st.button("🚀 Upload & Process", type="primary", key="upload_btn"):
                     with st.spinner("🔄 Uploading and processing document..."):
                         try:
-                            # Read file into memory
                             file_bytes = uploaded_file.getvalue()
                             
-                            # Upload to backend
                             files = {"file": (uploaded_file.name, file_bytes)}
                             headers = {"x-api-key": "admin123"}
                             
@@ -379,11 +347,9 @@ if st.session_state.admin_authenticated:
         
         st.markdown('</div>', unsafe_allow_html=True)
 
-# Sidebar for product and document selection (for all users)
 with st.sidebar:
     st.markdown("### 🗂️ Available Products")
     
-    # Fetch available products and documents from backend
     try:
         resp = requests.get(f"{API_BASE}/products")
         if resp.status_code == 200:
@@ -399,7 +365,6 @@ with st.sidebar:
         products_data = {}
 
     if products:
-        # Enhanced product selection
         product = st.selectbox(
             "📋 Choose a product to query:",
             products,
@@ -410,7 +375,6 @@ with st.sidebar:
         )
         st.session_state.selected_product = product
         
-        # Show documents for the selected product
         docs = products_data.get(product, [])
         if docs:
             st.markdown(f"**📄 Documents in {product}:**")
@@ -419,13 +383,11 @@ with st.sidebar:
         else:
             st.warning(f"⚠️ No documents found for {product}")
             
-        # Quick stats
         total_docs = sum(len(docs) for docs in products_data.values())
         st.markdown(f"**📊 Total: {len(products)} products, {total_docs} documents**")
     else:
         st.warning("⚠️ No products available. Upload documents to get started!")
 
-# Check if product is selected and has documents
 if not st.session_state.selected_product or not products_data.get(st.session_state.selected_product):
     st.markdown("""
     <div class="empty-state">
@@ -435,10 +397,7 @@ if not st.session_state.selected_product or not products_data.get(st.session_sta
     """, unsafe_allow_html=True)
     st.stop()
 
-# Compact spacing
 st.markdown('<div style="margin: 1rem 0;"></div>', unsafe_allow_html=True)
-
-# Simple and attractive chat section - more compact
 st.markdown(f"""
 <div style="text-align: center; margin-bottom: 1.5rem;">
     <h2 style="color: #1976d2; font-size: 1.8rem; margin-bottom: 0.3rem;">
@@ -450,14 +409,11 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# Question Input - more compact
 st.markdown("""
 <div style="background: white; padding: 1.5rem; border-radius: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); margin: 1rem 0;">
     <h3 style="color: #333; margin-bottom: 0.8rem; text-align: center;">✨ What would you like to know?</h3>
 </div>
 """, unsafe_allow_html=True)
-
-# Force full width container
 st.markdown('<div class="question-container">', unsafe_allow_html=True)
 
 question = st.text_input(
@@ -475,7 +431,6 @@ col1, col2, col3 = st.columns([1, 2, 1])
 with col2:
     ask_clicked = st.button("🚀 Get Answer", type="primary", use_container_width=True)
 
-# Process question
 if ask_clicked and question.strip():
     with st.spinner("🤖 Getting answer..."):
         try:
@@ -486,7 +441,6 @@ if ask_clicked and question.strip():
             
             if response.status_code == 200:
                 answer = response.json()["answer"]
-                # Add to chat history
                 st.session_state.chat_history.append({
                     "question": question,
                     "answer": answer,
@@ -501,12 +455,10 @@ if ask_clicked and question.strip():
 elif ask_clicked and not question.strip():
     st.warning("⚠️ Please enter a question first!")
 
-# Chat History Section
 if st.session_state.chat_history:
     st.markdown('<div style="margin: 2rem 0;"></div>', unsafe_allow_html=True)
     st.markdown('<div class="chat-history">', unsafe_allow_html=True)
     
-    # Header
     col1, col2, col3 = st.columns([1, 2, 1])
     with col2:
         st.markdown("### 📝 Conversation History")
@@ -517,9 +469,7 @@ if st.session_state.chat_history:
     
     st.markdown("---")
     
-    # Display conversations - clean and simple
     for i, chat in enumerate(reversed(st.session_state.chat_history)):
-        # Question
         st.markdown(f"""
         <div class="message-user">
             <strong>❓ Your Question:</strong><br>
@@ -527,7 +477,6 @@ if st.session_state.chat_history:
         </div>
         """, unsafe_allow_html=True)
         
-        # Answer
         st.markdown(f"""
         <div class="message-assistant">
             <strong>🤖 Answer:</strong><br>
@@ -535,21 +484,18 @@ if st.session_state.chat_history:
         </div>
         """, unsafe_allow_html=True)
         
-        # Delete option
         col1, col2, col3, col4 = st.columns([3, 1, 1, 1])
         with col4:
             if st.button("🗑️ Delete", key=f"delete_{i}"):
                 st.session_state.chat_history.pop(-(i+1))
                 st.rerun()
         
-        # Separator
         if i < len(st.session_state.chat_history) - 1:
             st.markdown("---")
     
     st.markdown('</div>', unsafe_allow_html=True)
     
 else:
-    # Empty state
     st.markdown("""
     <div class="empty-state">
         <div style="font-size: 2rem; margin-bottom: 1rem;">💭</div>
@@ -557,8 +503,6 @@ else:
         <p>Ask a question above to start your conversation!</p>
     </div>
     """, unsafe_allow_html=True)
-
-# Footer - compact
 st.markdown("---")
 st.markdown(
     """
